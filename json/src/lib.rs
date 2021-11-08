@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use serde::{Deserialize, Serialize};
 use serde_json::value::RawValue;
 use serde_json::Result;
@@ -103,9 +105,8 @@ pub struct PackageJson<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub optional_dependencies: Option<&'a RawValue>,
     
-    #[serde(borrow)]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub peer_dependencies: Option<&'a RawValue>,
+    pub peer_dependencies: Option<HashMap<String, String>>,
     
     #[serde(borrow)]
     #[serde(skip_serializing_if = "Option::is_none")]
