@@ -59,13 +59,21 @@ fn main() -> Result<(), Box<dyn Error>> {
                 let data = std::fs::read_to_string(fath).expect("Unable to read file");
                 let mut package_json: PackageJson = PackageJson::load(&data).expect(&format!("Unable to parse {}", fath.to_str().unwrap()));
 
-                package_json.license = license;
-                package_json.private = opt.field_private;
+                if license.is_some() {
+                    package_json.license = license;
+                }
+
+                if opt.field_private.is_some() {
+                    package_json.private = opt.field_private;
+                }
 
                 if let Some(new_deps) = new_peer_dependencies {
                     package_json.peer_dependencies.as_mut().and_then(|old_deps| {
                         for (k, v) in new_deps {
-                            old_deps.insert(k, v);
+                            let key: &str = k.as_ref();
+                            if old_deps.contains_key(key) {
+                                old_deps.insert(key, v);
+                            }
                         }
                         Some(old_deps)
                     });
