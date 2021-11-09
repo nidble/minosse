@@ -6,19 +6,6 @@ use json::PackageJson;
 use std::path::PathBuf;
 use structopt::StructOpt;
 
-fn parse_key_val<T, U>(s: &str) -> Result<(T, U), Box<dyn Error>>
-where
-    T: std::str::FromStr,
-    T::Err: Error + 'static,
-    U: std::str::FromStr,
-    U::Err: Error + 'static,
-{
-    let pos = s.find('=')
-        .ok_or_else(|| format!("invalid KEY=value: no `=` found in `{}`", s))?;
-
-    Ok((s[..pos].parse()?, s[pos + 1..].parse()?))
-}
-
 #[derive(Debug, StructOpt)]
 #[structopt(name = "minosse", about = "Minosse usage...")]
 struct Opt {
@@ -61,30 +48,24 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     for entry in fs_walker::walk(opt.input_dir) {
         let dir_entry = entry?;
-        let path =  dir_entry.path();
+        let path_buf =  dir_entry.path();
         let file_name = dir_entry.file_name;
         if let Some(file_name) = file_name.to_str() {
             if file_name.contains("package.json") {
-                let fath = path.as_path();
-                let data = std::fs::read_to_string(fath).expect("Unable to read file");
-                let mut package_json: PackageJson = PackageJson::load(&data).expect(&format!("Unable to parse {}", fath.to_str().unwrap()));
+                let path = path_buf.as_path();
+                let data = std::fs::read_to_string(path).expect("Unable to read file");
+                let mut package_json: PackageJson = PackageJson::load(&data).expect(&format!("Unable to parse {}", path.to_str().unwrap()));
 
-                if license.is_some() {
-                    package_json.license = license;
-                }
-
-                if opt.field_private.is_some() {
-                    package_json.private = opt.field_private;
-                }
+                update_single_field(&mut package_json.license, license);
+                update_single_field(&mut package_json.private, opt.field_private);
 
                 update_map_field(&mut package_json.peer_dependencies, new_peer_dependencies);
                 update_map_field(&mut package_json.dev_dependencies, new_dev_dependencies);
                 update_map_field(&mut package_json.dependencies, new_dependencies);
                 
-                let destination = format!("{}{}", fath.to_str().unwrap(), opt.suffix);
+                let destination = format!("{}{}", path.to_str().unwrap(), opt.suffix);
                 std::fs::write(destination, PackageJson::save(&package_json).expect("Error during writing file to disk"))?;
 
-                // println!("{:?}", package_json);
                 println!("{:?}", "DONE\n");
             }
         }
@@ -93,16 +74,36 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn update_map_field<'a>(deps: &mut Option<HashMap<&'a str, &'a str>>, new_dependencies: Option<&'a [(String, String)]>) {
-    if let Some(new_deps) = new_dependencies {
-        deps.as_mut().and_then(|old_deps| {
-            for (k, v) in new_deps {
+fn update_single_field<T>(maybe_field: &mut Option<T>, maybe_new_value: Option<T>) {
+    if maybe_new_value.is_some() {
+        *maybe_field = maybe_new_value;
+    }
+}
+
+fn update_map_field<'a>(maybe_field: &mut Option<HashMap<&'a str, &'a str>>, maybe_new_value: Option<&'a [(String, String)]>) {
+    if let Some(new_value) = maybe_new_value {
+        maybe_field.as_mut().and_then(|field| {
+            for (k, v) in new_value {
                 let key: &str = k.as_ref();
-                if old_deps.contains_key(key) {
-                    old_deps.insert(key, v);
+                if field.contains_key(key) {
+                    field.insert(key, v);
                 }
             }
-            Some(old_deps)
+            Some(field)
         });
     }
+}
+
+
+fn parse_key_val<T, U>(s: &str) -> Result<(T, U), Box<dyn Error>>
+where
+    T: std::str::FromStr,
+    T::Err: Error + 'static,
+    U: std::str::FromStr,
+    U::Err: Error + 'static,
+{
+    let pos = s.find('=')
+        .ok_or_else(|| format!("invalid KEY=value: no `=` found in `{}`", s))?;
+
+    Ok((s[..pos].parse()?, s[pos + 1..].parse()?))
 }
