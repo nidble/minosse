@@ -66,29 +66,27 @@ fn main() -> Result<(), Box<dyn Error>> {
     for entry in fs_walker::walk(opt.input_dir) {
         let dir_entry = entry?;
         let path_buf =  dir_entry.path();
-        let file_name = dir_entry.file_name;
-        if let Some(file_name) = file_name.to_str() {
-            if file_name.contains("package.json") {
-                let path = path_buf.as_path();
-                let data = std::fs::read_to_string(path).expect("Unable to read file");
-                let mut package_json: PackageJson = PackageJson::load(&data).expect(&format!("Unable to parse {}", path.to_str().unwrap()));
+        let file_name = dir_entry.file_name.to_str().unwrap_or_default();
+        if file_name.eq("package.json") {
+            let path = path_buf.as_path();
+            let data = std::fs::read_to_string(path).expect("Unable to read file");
+            let mut package_json: PackageJson = PackageJson::load(&data).expect(&format!("Unable to parse {}", path.to_str().unwrap()));
 
-                update_single_field(&mut package_json.license, new_license);
-                update_single_field(&mut package_json.private, opt.update_private);
+            update_single_field(&mut package_json.license, new_license);
+            update_single_field(&mut package_json.private, opt.update_private);
 
-                update_map_field(&mut package_json.peer_dependencies, new_peer_dependencies);
-                update_map_field(&mut package_json.dev_dependencies, new_dev_dependencies);
-                update_map_field(&mut package_json.dependencies, new_dependencies);
+            update_map_field(&mut package_json.peer_dependencies, new_peer_dependencies);
+            update_map_field(&mut package_json.dev_dependencies, new_dev_dependencies);
+            update_map_field(&mut package_json.dependencies, new_dependencies);
 
-                remove_map_field(&mut package_json.peer_dependencies, remove_peer_dependencies);
-                remove_map_field(&mut package_json.dev_dependencies, remove_dev_dependencies);
-                remove_map_field(&mut package_json.dependencies, remove_dependencies);
-                
-                let destination = format!("{}{}", path.to_str().unwrap(), opt.suffix);
-                std::fs::write(destination, PackageJson::save(&package_json).expect("Error during writing file to disk"))?;
+            remove_map_field(&mut package_json.peer_dependencies, remove_peer_dependencies);
+            remove_map_field(&mut package_json.dev_dependencies, remove_dev_dependencies);
+            remove_map_field(&mut package_json.dependencies, remove_dependencies);
+            
+            let destination = format!("{}{}", path.to_str().unwrap(), opt.suffix);
+            std::fs::write(destination, PackageJson::save(&package_json).expect("Error during writing file to disk"))?;
 
-                println!("{:?}", "DONE");
-            }
+            println!("{:?}", "DONE");
         }
     }
 
