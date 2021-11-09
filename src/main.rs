@@ -1,4 +1,4 @@
-use std::error::Error;
+use std::{collections::HashMap, error::Error};
 
 use fs_walker;
 use json::PackageJson;
@@ -30,23 +30,33 @@ struct Opt {
     #[structopt(default_value = "", long)]
     suffix: String,
 
-    /// New value for package.json field `license`
+    /// New value for package.json's field `license`
     #[structopt(long)]
     field_license: Option<String>,
 
-    /// New value for package.json field `private`
+    /// New value for package.json's field `private`
     #[structopt(long)]
     field_private: Option<bool>,
 
-    /// New value for package.json field `peerDependencies`
+    /// New value for package.json's field `peerDependencies`
     #[structopt(long, parse(try_from_str = parse_key_val))]
     field_peer_dependencies: Option<Vec<(String, String)>>,
+
+    /// New value for package.json's field `devDependencies`
+    #[structopt(long, parse(try_from_str = parse_key_val))]
+    field_dev_dependencies: Option<Vec<(String, String)>>,
+
+    /// New value for package.json's field `dependencies`
+    #[structopt(long, parse(try_from_str = parse_key_val))]
+    field_dependencies: Option<Vec<(String, String)>>,
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
     let opt: Opt = Opt::from_args();
     let license = opt.field_license.as_deref();
     let new_peer_dependencies = opt.field_peer_dependencies.as_deref();
+    let new_dev_dependencies = opt.field_dev_dependencies.as_deref();
+    let new_dependencies = opt.field_dependencies.as_deref();
     println!("Arguments: {:?}", opt);
 
     for entry in fs_walker::walk(opt.input_dir) {
@@ -67,25 +77,32 @@ fn main() -> Result<(), Box<dyn Error>> {
                     package_json.private = opt.field_private;
                 }
 
-                if let Some(new_deps) = new_peer_dependencies {
-                    package_json.peer_dependencies.as_mut().and_then(|old_deps| {
-                        for (k, v) in new_deps {
-                            let key: &str = k.as_ref();
-                            if old_deps.contains_key(key) {
-                                old_deps.insert(key, v);
-                            }
-                        }
-                        Some(old_deps)
-                    });
-                }
+                update_map_field(&mut package_json.peer_dependencies, new_peer_dependencies);
+                update_map_field(&mut package_json.dev_dependencies, new_dev_dependencies);
+                update_map_field(&mut package_json.dependencies, new_dependencies);
                 
                 let destination = format!("{}{}", fath.to_str().unwrap(), opt.suffix);
                 std::fs::write(destination, PackageJson::save(&package_json).expect("Error during writing file to disk"))?;
 
+                // println!("{:?}", package_json);
                 println!("{:?}", "DONE\n");
             }
         }
     }
 
     Ok(())
+}
+
+fn update_map_field<'a>(deps: &mut Option<HashMap<&'a str, &'a str>>, new_dependencies: Option<&'a [(String, String)]>) {
+    if let Some(new_deps) = new_dependencies {
+        deps.as_mut().and_then(|old_deps| {
+            for (k, v) in new_deps {
+                let key: &str = k.as_ref();
+                if old_deps.contains_key(key) {
+                    old_deps.insert(key, v);
+                }
+            }
+            Some(old_deps)
+        });
+    }
 }
