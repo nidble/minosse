@@ -65,7 +65,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 if let Some(new_deps) = new_peer_dependencies {
                     package_json.peer_dependencies.as_mut().and_then(|old_deps| {
                         for (k, v) in new_deps {
-                            old_deps.insert(k.clone(), v.clone());
+                            old_deps.insert(k, v);
                         }
                         Some(old_deps)
                     });

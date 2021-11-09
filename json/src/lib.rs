@@ -105,8 +105,9 @@ pub struct PackageJson<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub optional_dependencies: Option<&'a RawValue>,
     
+    #[serde(borrow)]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub peer_dependencies: Option<HashMap<String, String>>,
+    pub peer_dependencies: Option<HashMap<&'a str, &'a str>>,
     
     #[serde(borrow)]
     #[serde(skip_serializing_if = "Option::is_none")]
