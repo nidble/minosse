@@ -1,5 +1,5 @@
 # minosse
-An ultra fast CLI app that fixes json files in large codebase or folders
+An ultra fast CLI app that will help you to manage (add/update/remove field and dependencies) on large codebases containing multiple package.json (ie: monorepo).
 
 ## USAGE:
     minosse [OPTIONS] <input-dir>
@@ -9,9 +9,16 @@ An ultra fast CLI app that fixes json files in large codebase or folders
     -V, --version    Prints version information
 
 ## OPTIONS:
-        --field-license <field-license>    New value for Package.json field `license`
-        --field-private <field-private>    New value for Package.json field `private`
-        --suffix <suffix>                  Output file: `file` or `file<suffix>` [default: ]
+        --remove-dependencies <remove-dependencies>             Remove value from package.json's field `dependencies`
+        --remove-dev-dependencies <remove-dev-dependencies>     Remove value from package.json's field `dependencies`
+        --remove-peer-dependencies <remove-peer-dependencies>   Remove value from package.json's field `peerDependencies`
+
+        --suffix <suffix>                                       Avoid inplace replace by adding suffix ie: `file<suffix>`
+        --update-dependencies <update-dependencies>             Update value for package.json's field `dependencies`
+        --update-dev-dependencies <update-dev-dependencies>     Update value for package.json's field `devDependencies`
+        --update-license <update-license>                       Update value for package.json's field `license`
+        --update-peer-dependencies <update-peer-dependencies>   Update value for package.json's field `peerDependencies`
+        --update-private <update-private>                       Update value for package.json's field `private`
 
 ## ARGS:
     <input-dir>    Input dir
@@ -19,5 +26,18 @@ An ultra fast CLI app that fixes json files in large codebase or folders
 ## Examples
 
 ```bash
-./minosse . --field-private true --field-license MIT --suffix .new
+./minosse . --update-private true --update-license MIT --suffix .new
+```
+
+```bash
+./minosse . \
+    --update-peer-dependencies "@storybook/addon-a11y=^6.3.12" \
+    --update-dev-dependencies "@storybook/addon-a11y=^6.3.12" \
+    --update-dependencies "@storybook/addon-a11y=^6.3.12"
+```
+
+```bash
+./minosse . \
+    --update-peer-dependencies "backbone=^1.4.0" \
+    --remove-dependencies "react"
 ```

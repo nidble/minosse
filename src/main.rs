@@ -13,7 +13,7 @@ struct Opt {
     #[structopt(parse(from_os_str))]
     input_dir: PathBuf,
 
-    /// Output file: `file` or `file<suffix>`
+    /// Avoid inplace replace by adding suffix ie: `file<suffix>`
     #[structopt(default_value = "", long)]
     suffix: String,
 
