@@ -13,7 +13,7 @@ An ultra fast CLI app that will help you to manage (add/update/remove field and 
         --remove-dev-dependencies <remove-dev-dependencies>     Remove value from package.json's field `dependencies`
         --remove-peer-dependencies <remove-peer-dependencies>   Remove value from package.json's field `peerDependencies`
 
-        --suffix <suffix>                                       Avoid inplace replace by adding suffix ie: `file<suffix>`
+        --suffix <suffix>                                       Rename destination by adding suffix ie: `file<suffix>`
         --update-dependencies <update-dependencies>             Update value for package.json's field `dependencies`
         --update-dev-dependencies <update-dev-dependencies>     Update value for package.json's field `devDependencies`
         --update-license <update-license>                       Update value for package.json's field `license`

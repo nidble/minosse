@@ -13,7 +13,7 @@ struct Opt {
     #[structopt(parse(from_os_str))]
     input_dir: PathBuf,
 
-    /// Avoid inplace replace by adding suffix ie: `file<suffix>`
+    /// Rename destination by adding suffix ie: `file<suffix>`
     #[structopt(default_value = "", long)]
     suffix: String,
 
@@ -82,7 +82,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             remove_map_field(&mut package_json.peer_dependencies, remove_peer_dependencies);
             remove_map_field(&mut package_json.dev_dependencies, remove_dev_dependencies);
             remove_map_field(&mut package_json.dependencies, remove_dependencies);
-            
+
             let destination = format!("{}{}", path.to_str().unwrap(), opt.suffix);
             std::fs::write(destination, PackageJson::save(&package_json).expect("Error during writing file to disk"))?;
 
